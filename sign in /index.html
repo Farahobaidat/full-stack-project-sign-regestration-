@@ -5,25 +5,39 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Sign In</title>
     <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href=
+"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
+   <div id="container">
+    
+<div id="welcom">   
+<h3>Glade To See You</h3>
+<p>Login to join with your journey in our site...</p>
+</div>
+
     <div class="divClass">
         <h1>Sign In</h1>
         <div class="inputDiv">
-            <label for="UserName">User Name:</label>
-            <input type="text" id="UserName" required>
+            <i class="fa fa-envelope icon"></i>
+            <input type="text" id="Email" required>
+            
         </div>
         <div class="inputDiv">
-            <label for="pass">Password:</label>
+            
+            <i class="fa fa-lock icon"></i>
             <input type="password" id="pass" required>
+            
         </div>
+        
         <button>Sign In</button>
-        <button>Sign Up</button>
+        <p>Do not have account?<a href="">sign up</a> </p>
+   
     </div>
-
+   </div>
     <script src="./script.js"></script>
 </body>
 
