@@ -1,34 +1,35 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const port = 6000;
+const port = 2000;
 const mysql = require('mysql');
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 
+
 app.use(cookieParser());
 
 app.get('/cookie', function (req, res) {
-  
+
   console.log('Cookies: ', req.cookies.jwt);
-  
+  res.cookie("Hey", true);
   // Cookies that have been signed
   console.log('Signed Cookies: ', req.signedCookies)
   res.send("yeah");
 })
 
 app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 let parseBody = bodyParser.urlencoded({ extended: true });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
   next();
-  });  
+});
 
 let connection = mysql.createPool({
   connectionLimit: 50,
@@ -40,40 +41,41 @@ let connection = mysql.createPool({
 
 let token1 = null;
 
-const createToken = (email) =>{
-   jwt.sign(
-    {email},
+const createToken = (email) => {
+  return jwt.sign(
+    { email },
     "secret",
     {
-      expiresIn:"1h"
+      expiresIn: "30"
     }
   );
 }
 
-const requireAuth = (req, res,next) => {
+const requireAuth = (req, res, next) => {
   console.log("hi");
   const token1 = req.cookies;
-  console.log('token ',token1);
+  console.log('token ', token1);
   // check jwt token exist & verified 
   if (token1) {
-    jwt.verify(token1, "secret",(err,decodedToken)=>{
-      if(err) {
+    jwt.verify(token1, "secret", (err, decodedToken) => {
+      if (err) {
         console.log("yes");
         // bring undefinedhim back to login screen
         res.redirect("/login");
       }
-      
+
       else {
-        console.log('decoded ',decodedToken);
+        console.log('decoded ', decodedToken);
         next();
       }
-      
+
     })
   }
-  else{
+  else {
     res.redirect("/login");
   }
 }
+
 
 app.post('/users/signup', parseBody, function (request, response) {
   let username = request.body.username;
@@ -110,32 +112,8 @@ app.post('/users/signup', parseBody, function (request, response) {
 });
 
 
+
 app.post('/users/signin', parseBody, function (req, res) {
-  // const email = req.body.email;
-  // const password = req.body.password
-  // let hash = bcrypt.hashSync(password, 5);
-  // const dcryptPassword = bcrypt.compareSync(password, hash);
-  // console.log(dcryptPassword,email,password,hash);
-  // if (email && dcryptPassword) {
-  //     connection.query('SELECT email,password FROM Users WHERE email = ? password = ?', [email,dcryptPassword], 
-  //     (error, results,failed) => {
-  //       // let email1 = results[0];
-  //       // console.log('email ',email1);
-  //         if (results.length > 0 ) {
-  //             res.send("Successful");
-  //         }
-
-  //         else {
-  //           console.log(email,dcryptPassword,results.length,results);
-  //             res.send('Incorrect Email and/or Password!');
-  //         }           
-  //         res.end();
-  //     });
-  // } else {
-  //     res.send('Please enter email and Password!');
-  //     res.end();
-  // }
-
   let email = req.body.email;
   let password = req.body.password;
 
@@ -145,9 +123,9 @@ app.post('/users/signin', parseBody, function (req, res) {
     return;
   }
 
-  connection.query("SELECT email, password FROM Users WHERE email=?", [email], function (err, rows) {
+  connection.query("SELECT id, email, password FROM Users WHERE email=?", [email], function (err, rows) {
     var user = rows[0];
-    
+
     if (!user) {
       res.status(400).send("email is wrong");
       return;
@@ -159,25 +137,37 @@ app.post('/users/signin', parseBody, function (req, res) {
         res.send("Auth Faill");
         return;
       }
-      
-      if (result == true) {
-        const token = createToken(user.email)
-        res.cookie('jwt', token,{httpOnly: true , seconds : 30});
-        res.status(200).send(token);
+
+      if (!result) {
+        res.status(401).send("Wrong password");
+        return;
       }
-      else{
-        res.status(401).send("Wrong password");  
-      }
-      
+
+      const token = createToken(user.email);
+      console.log('tooken: ', token);
+      res.cookie('jwt', token/*,{ httpOnly: true, expiresIn: 30 * 30 }*/);
+      console.log('Cookies: ', req.cookies);
+      res.status(200).send(token);
     });
 
-    
+
   });
 
 
 });
 
-app.get("/users/home",requireAuth, function (req, res) {
+app.get('/users/signin', (req, res) => {
+  // res.render('../signin/index.html');
+  // res.json({success: true})
+  // res.cookie("test",true);
+  // res.status(500).send("yeaaah");
+})
+
+app.get('/users/signup', (req, res) => {
+  res.render('signup');
+})
+
+app.get("/users/home", requireAuth, function (req, res) {
   res.render("/home")
   res.status(200).send("yes");
   console.log("no")
